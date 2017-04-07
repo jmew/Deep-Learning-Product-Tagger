@@ -16,7 +16,7 @@ from torch.autograd import Variable
 
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 
-HOST_NAME = 'localhostz'
+HOST_NAME = 'localhost'
 PORT = 3000
 
 model_names = sorted(name for name in models.__dict__
@@ -25,7 +25,7 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('data', metavar='DIR',
+parser.add_argument('data', metavar='DIR', default='',
                     help='path to dataset')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     choices=model_names,
