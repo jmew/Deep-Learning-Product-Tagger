@@ -57,8 +57,6 @@ parser.add_argument('--pretrained', dest='pretrained', action='store_true',
 parser.add_argument('--server', dest='server', action='store_true',
                     help='server')
 
-best_prec1 = 0
-
 class MyHandler(BaseHTTPRequestHandler):
     def do_HEAD(s):
         s.send_response(200)
@@ -80,6 +78,7 @@ class MyHandler(BaseHTTPRequestHandler):
 
 def main():
     global args, best_prec1
+    best_prec1 = 0
     args = parser.parse_args()
 
     if args.server:
