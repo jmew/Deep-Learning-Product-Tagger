@@ -2,6 +2,12 @@
 	height: 20px;
 }
 
+@media only screen and (min-width: 992px) {
+	#wish-logo {
+		padding-left: 20px;	
+	}
+}
+
 #sidenav-overlay {
 	z-index: 996;
 }
