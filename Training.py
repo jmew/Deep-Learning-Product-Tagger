@@ -77,8 +77,7 @@ class MyHandler(BaseHTTPRequestHandler):
                           "</h1></body></html>")
 
 def main():
-    global args, best_prec1
-    best_prec1 = 0
+    global args
     args = parser.parse_args()
 
     if args.server:
@@ -132,6 +131,7 @@ def getPrediction(file, use_gpu):
 
 def train_model():
     use_gpu = torch.cuda.is_available()
+    best_prec1 = 0
 
     # create model
     if args.pretrained:
