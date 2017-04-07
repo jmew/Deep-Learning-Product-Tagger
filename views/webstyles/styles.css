@@ -1,0 +1,33 @@
+#wish-logo {
+	height: 20px;
+}
+
+#sidenav-overlay {
+	z-index: 996;
+}
+
+.navbar-fixed nav {
+	z-index: 10000;
+}
+
+.wish-blue {
+	background-color: #5EC7F0 !important;
+}
+
+.tab-content {
+	padding-top: 132px;
+	width: 95%;
+	margin: 0 auto;
+}
+
+.dropzone .dz-message {
+	margin: 4em 0;
+}
+
+.dz-image-preview {
+	padding: 12%;
+}
+
+.dz-details {
+	margin-top: 30px;
+}
