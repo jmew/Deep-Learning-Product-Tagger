@@ -36,19 +36,22 @@ app.post( '/upload', upload.single( 'file' ), function( req, res, next ) {
 
   const options = {
   	method: 'POST',
-  	uri: 'IDK JEFFREY',
+  	uri: 'localhost:3000/prediction',
   	body: req.file,
   	json: true,
   }
 
-  request(options).then( res => {
-  	res.status(200).json(response);
-  	return res.status(200).send(res)
+  request(options).then( response => {
+    console.log(response)
+  	return res.status(200).send(req.file);
+    //return res.status(200).send(response)
   })
   .catch( err => {
   	console.log(err);
   });
-  
+  // console.log(req.file);
+  // return res.status(200).send(req.file);
+
 });
 
 app.listen( 8080, function() {
