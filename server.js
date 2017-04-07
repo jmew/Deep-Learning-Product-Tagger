@@ -36,21 +36,21 @@ app.post( '/upload', upload.single( 'file' ), function( req, res, next ) {
 
   const options = {
   	method: 'POST',
-  	uri: 'localhost:3000/prediction',
+  	uri: '34.208.166.250:80',
   	body: req.file,
   	json: true,
   }
 
-  request(options).then( response => {
-    console.log(response)
-  	return res.status(200).send(req.file);
-    //return res.status(200).send(response)
-  })
-  .catch( err => {
-  	console.log(err);
-  });
-  // console.log(req.file);
-  // return res.status(200).send(req.file);
+  // request(options).then( response => {
+  //   console.log(response)
+  // 	return res.status(200).send(req.file);
+  //   //return res.status(200).send(response)
+  // })
+  // .catch( err => {
+  // 	console.log(err);
+  // });
+  console.log(req.file);
+  return res.status(200).send(req.file);
 
 });
 
