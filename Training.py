@@ -16,7 +16,7 @@ from torch.autograd import Variable
 
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 
-HOST_NAME = 'localhostz'
+HOST_NAME = 'localhost'
 PORT = 3000
 
 model_names = sorted(name for name in models.__dict__
@@ -25,7 +25,7 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('data', metavar='DIR',
+parser.add_argument('data', metavar='DIR', default='',
                     help='path to dataset')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     choices=model_names,
@@ -71,7 +71,7 @@ class MyHandler(BaseHTTPRequestHandler):
         s.end_headers()
         file = s.rfile.read()
 
-        predictions = getPrediction(file, True)
+        predictions = getPrediction(file, torch.cuda.is_available())
 
         for prediction in predictions:
             s.wfile.write("<html><body><h1>" +
@@ -99,27 +99,22 @@ def getPrediction(file, use_gpu):
     model = torch.load(best_model)
 
     data_transforms = {
-        'train': transforms.Compose([
+        'uploads': transforms.Compose([
             transforms.RandomSizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
-        'val': transforms.Compose([
-            transforms.Scale(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
     }
-    dsets = {x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x])
-             for x in ['train', 'val']}
-    dset_loaders = {x: torch.utils.data.DataLoader(dsets[x], batch_size=4,
-                                                   shuffle=True, num_workers=4)
-                    for x in ['train', 'val']}
-    dset_classes = dsets['train'].classes
 
-    for i, data in enumerate(dset_loaders['val']):
+    dsets = {x: datasets.ImageFolder(os.path.join(file, x), data_transforms[x])
+             for x in ['uploads']}
+    dset_loaders = {x: torch.utils.data.DataLoader(dsets[x], batch_size=1,
+                                                   shuffle=True, num_workers=4)
+                    for x in ['uploads']}
+    dset_classes = dsets['uploads'].classes
+
+    for i, data in enumerate(dset_loaders['uploads']):
         inputs, labels = data
         if use_gpu:
             inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
@@ -134,7 +129,7 @@ def getPrediction(file, use_gpu):
         if i == 1:
             return prediction
 
-    return #Todo return results of model
+    return "ERROR"
 
 def train_model():
     use_gpu = torch.cuda.is_available()
