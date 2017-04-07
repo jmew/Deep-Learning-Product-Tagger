@@ -12,8 +12,9 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
+from torch.autograd import Variable
 
-import BaseHTTPServer
+from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 
 HOST_NAME = 'localhost'
 PORT = 3000
@@ -58,7 +59,7 @@ parser.add_argument('--server', dest='server', action='store_true',
 
 best_prec1 = 0
 
-class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class MyHandler(BaseHTTPRequestHandler):
     def do_HEAD(s):
         s.send_response(200)
         s.send_header("Content-type", "text/html")
@@ -70,7 +71,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.end_headers()
         file = s.rfile.read()
 
-        predictions = getPrediction(file)
+        predictions = getPrediction(file, True)
 
         for prediction in predictions:
             s.wfile.write("<html><body><h1>" +
@@ -82,8 +83,7 @@ def main():
     args = parser.parse_args()
 
     if args.server:
-        server_class = BaseHTTPServer.HTTPServer
-        httpd = server_class((HOST_NAME, PORT), MyHandler)
+        httpd = HTTPServer((HOST_NAME, PORT), MyHandler)
         print "Server Starts - %s:%s" % (HOST_NAME, PORT)
         try:
             httpd.serve_forever()
@@ -93,9 +93,47 @@ def main():
     else:
         train_model()
 
-def getPrediction(file):
+
+def getPrediction(file, use_gpu):
     best_model = 'model_best.pth.tar'
-    model = torch.load('best_model')
+    model = torch.load(best_model)
+
+    data_transforms = {
+        'train': transforms.Compose([
+            transforms.RandomSizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        'val': transforms.Compose([
+            transforms.Scale(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+    }
+    dsets = {x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x])
+             for x in ['train', 'val']}
+    dset_loaders = {x: torch.utils.data.DataLoader(dsets[x], batch_size=4,
+                                                   shuffle=True, num_workers=4)
+                    for x in ['train', 'val']}
+    dset_classes = dsets['train'].classes
+
+    for i, data in enumerate(dset_loaders['val']):
+        inputs, labels = data
+        if use_gpu:
+            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
+        else:
+            inputs, labels = Variable(inputs), Variable(labels)
+
+        outputs = model(inputs)
+        _, preds = torch.max(outputs.data, 1)
+
+        prediction = dset_classes[labels.data[0]]
+
+        if i == 1:
+            return prediction
+
     return #Todo return results of model
 
 def train_model():
