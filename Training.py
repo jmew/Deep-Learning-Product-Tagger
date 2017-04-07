@@ -16,7 +16,7 @@ from torch.autograd import Variable
 
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 
-HOST_NAME = 'localhost'
+HOST_NAME = 'localhostz'
 PORT = 3000
 
 model_names = sorted(name for name in models.__dict__
