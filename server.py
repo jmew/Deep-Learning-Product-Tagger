@@ -1,7 +1,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 
 HOST_NAME = 'localhost'
-PORT = 3000
+PORT = 80
 
 class MyHandler(BaseHTTPRequestHandler):
     def do_HEAD(s):
