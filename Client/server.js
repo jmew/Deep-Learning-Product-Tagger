@@ -46,8 +46,16 @@ app.post( '/upload', upload.single( 'file' ), function( req, res, next ) {
   	// return res.status(200).send(req.file);
     //return res.status(200).send(response)
   
+    var parseResponse = response.split(',');
+    var sendBack = {
+      'file': req.file,
+      'tag': parseResponse[0], 
+      'confidence': parseResponse[1]
+    }
+
+
     console.log(req.file);
-    return res.status(200).send(req.file);
+    return res.status(200).send(sendBack);
   })
   .catch( err => {
   	console.log(err);

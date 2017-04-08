@@ -1,4 +1,5 @@
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+import urlparse
 
 HOST_NAME = 'localhost'
 PORT = 3000 
@@ -10,16 +11,17 @@ class MyHandler(BaseHTTPRequestHandler):
         s.end_headers()
 
     def do_POST(s):
-        content = "Its a cat"
-        s.send_respone(200)
+        content = "boots, (95.451%)"
+        s.send_response(200)
         s.send_header("Content-Length", len(content))
         s.send_header("Content-Type", "text/html")
         s.end_headers()
 
-        length = int(s.headers['Content-Length'])
-        post_data = urlparse.parse_qs(s.rfile.read(length).decode('utf-8'))
+        # length = int(s.headers['Content-Length'])
+        # post_data = urlparse.parse_qs(s.rfile.read(length).decode('utf-8'))
+        post_data = "boots, 0.95"
 
-        s.wfile.write(post_data)
+        s.wfile.write(content)
 
 
         # predictions = getPrediction(file, torch.cuda.is_available())

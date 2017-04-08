@@ -5,7 +5,8 @@ Dropzone.options.uploadWidget = {
     init: function() {
 		this.on("success", function(file, resp) {
 			console.log(file);
-			console.log(resp)
+			console.log(resp);
+			$('#product-tags').val(resp.tag + resp.confidence); 
 		});
 		this.on("addedfile", function(file, resp) {
 			console.log("added");
