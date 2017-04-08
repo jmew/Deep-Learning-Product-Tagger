@@ -10,14 +10,16 @@ class MyHandler(BaseHTTPRequestHandler):
         s.end_headers()
 
     def do_POST(s):
-        s.send_response(200)
-        s.send_header("Content-type", "text/html")
+        content = "Its a cat"
+        s.send_respone(200)
+        s.send_header("Content-Length", len(content))
+        s.send_header("Content-Type", "text/html")
         s.end_headers()
-        file = s.rfile.read()
 
-        s.wfile.write("<html><body><h1>" +
-                            "its a cat" +
-                          "</h1></body></html>")
+        length = int(s.headers['Content-Length'])
+        post_data = urlparse.parse_qs(s.rfile.read(length).decode('utf-8'))
+
+        s.wfile.write(post_data)
 
         # predictions = getPrediction(file, torch.cuda.is_available())
 
