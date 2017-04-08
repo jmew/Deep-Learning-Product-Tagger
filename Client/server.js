@@ -36,22 +36,23 @@ app.post( '/upload', upload.single( 'file' ), function( req, res, next ) {
 
   const options = {
   	method: 'POST',
-  	uri: '34.208.166.250:80',
+  	uri: 'http://localhost:3000',
   	body: req.file,
   	json: true,
   }
 
-  // request(options).then( response => {
-  //   console.log(response)
-  // 	return res.status(200).send(req.file);
-  //   //return res.status(200).send(response)
-  // })
-  // .catch( err => {
-  // 	console.log(err);
-  // });
-  console.log(req.file);
-  return res.status(200).send(req.file);
-
+  request(options).then( response => {
+    console.log(response)
+  	// return res.status(200).send(req.file);
+    //return res.status(200).send(response)
+  
+    console.log(req.file);
+    return res.status(200).send(req.file);
+  })
+  .catch( err => {
+  	console.log(err);
+  });
+  
 });
 
 app.listen( 8080, function() {

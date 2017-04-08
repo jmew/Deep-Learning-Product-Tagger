@@ -1,7 +1,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 
 HOST_NAME = 'localhost'
-PORT = 80
+PORT = 3000 
 
 class MyHandler(BaseHTTPRequestHandler):
     def do_HEAD(s):
@@ -15,9 +15,7 @@ class MyHandler(BaseHTTPRequestHandler):
         s.end_headers()
         file = s.rfile.read()
 
-        s.wfile.write("<html><body><h1>" +
-                            "its a cat" +
-                          "</h1></body></html>")
+        s.wfile.write("you a cat")
 
         # predictions = getPrediction(file, torch.cuda.is_available())
 
