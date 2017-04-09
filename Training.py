@@ -20,13 +20,13 @@ from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from PIL import Image
 import torchvision.transforms as transforms
 import numpy as np
+import matplotlib.pyplot as plt
 
 HOST_NAME = 'localhost'
 PORT = 3000
 
-# classes = ['bags', 'bottoms', 'clocks', 'earrings', 'gloves', 'headphones', 
-#     'lamps', 'lighters', 'sandles', 'suits', 'watches', 'winter-boots']
-classes = ('bags', 'clock', 'earrings', 'gloves', 'winterboots')
+classes = ['Bag', 'Bottoms', 'Clock', 'Earring', 'Glove', 'Headphones', 
+    'Lamp', 'Lighter', 'Sandle', 'Suit', 'Watch', 'Boots']
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -76,17 +76,16 @@ class MyHandler(BaseHTTPRequestHandler):
         s.send_response(200)
         s.send_header("Content-type", "text/html")
         s.end_headers()
-        file = s.rfile.read()
 
-        predictions = getPrediction(file, torch.cuda.is_available())
+        postLength = int(s.headers['Content-Length'])
+        file = s.rfile.read(postLength)
 
-        for prediction in predictions:
-            s.wfile.write("<html><body><h1>" +
-                            str(prediction) +
-                          "</h1></body></html>")
+        prediction = getPrediction(file, torch.cuda.is_available())
+
+        s.wfile.write(str(prediction))
 
 def main():
-	# getPrediction('boot.jpg', torch.cuda.is_available())
+	# getPrediction('real_test/all/', torch.cuda.is_available())
     global args
     args = parser.parse_args()
 
@@ -102,18 +101,13 @@ def main():
         train_model()
 
 class TestImageFolder(torch.utils.data.Dataset):
-    def __init__(self, root, transform=None):
-        images = []
-        for filename in sorted(glob.glob('real_test/all/' + "*.jpg")):
-            images.append('{}'.format(filename))
-
-        self.root = root
-        self.imgs = images
+    def __init__(self, file, transform=None):
+        self.imgs = glob.glob(file)
         self.transform = transform
 
     def __getitem__(self, index):
         filename = self.imgs[index]
-        img = Image.open(os.path.join(self.root, filename))
+        img = Image.open(os.path.join('', filename))
         if self.transform is not None:
             img = self.transform(img)
         return img, filename
@@ -123,18 +117,12 @@ class TestImageFolder(torch.utils.data.Dataset):
 
 def getPrediction(file, use_gpu):
     best_model = 'model_best.pth.tar'
-    model = torch.load(best_model)
+    model = models.resnet18(pretrained=True)
+    checkpoint = torch.load(best_model)
+    model.load_state_dict(checkpoint['state_dict'])
+    model.eval()
 
-    data_dir = 'real_test/all'
-    # dset = datasets.ImageFolder(os.path.join(data_dir), 
-    #     transforms.Compose([
-    #         transforms.Scale(256),
-    #         transforms.CenterCrop(224),
-    #         transforms.ToTensor(),
-    #         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    #         ])
-    #     )
-    dset = TestImageFolder('', 
+    dset = TestImageFolder(file, 
         transforms.Compose([
             transforms.Scale(256),
             transforms.CenterCrop(224),
@@ -144,43 +132,21 @@ def getPrediction(file, use_gpu):
         )
 
     test_loader = torch.utils.data.DataLoader(dset, batch_size=1, shuffle=True, num_workers=1, pin_memory=False)
-    # dset_dict = dict(dset.imgs)
-    # dset_classes = dset.classes
 
-    # data_iter = iter(dset_loaders)
-    # inputs, labels = data_iter.next()
+    i, (image, filepath) = next(enumerate(test_loader))
 
-    for i, (images, filepath) in enumerate(test_loader):
-        outputs = model(Variable(images))
-        # if use_gpu:
-        #     inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
-        # else:
-        #     inputs, labels = Variable(inputs), Variable(labels)
+    if use_gpu:
+        inputs = Variable(image.cuda())
+    else:
+        inputs = Variable(image)
 
-        # outputs = model(inputs)
-        _, preds = torch.max(outputs.data, 1)
+    outputs = model(inputs)
+    _, preds = torch.max(outputs.data, 1)
+    
+    print("PREDICTION: " + classes[preds[0][0]])
+    print("ACTUAL: " + filepath[0])
 
-        imshow(Variable(images).cpu().data[0])
-        import pdb;pdb.set_trace()
-
-        smax = nn.Softmax()
-        smax_out = smax(outputs)[0]
-        cat_prob = smax_out.data[0]
-        dog_prob = smax_out.data[1]
-        
-        
-        # print("PREDICTION: " + classes[labels.data[0]])
-        # print("ACTUAL: " + dset_classes[labels.data[0]])
-        # print(str((preds==data).sum()))
-
-def imshow(inp):
-    inp = inp.numpy().transpose((1, 2, 0))
-    mean = np.array([0.485, 0.456, 0.406])
-    std = np.array([0.229, 0.224, 0.225])
-    inp = std * inp + mean
-    plt.figure()
-    plt.imshow(inp)
-    plt.show()
+    return str(classes[preds[0][0]])
 
 def image_loader(image_name):
 	"""load image, returns cuda tensor"""
