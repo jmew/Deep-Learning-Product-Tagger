@@ -2,6 +2,7 @@ import argparse
 import os
 import shutil
 import time
+import glob
 
 import torch
 import torch.nn as nn
@@ -9,22 +10,31 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
+import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 from torch.autograd import Variable
+import matplotlib.pyplot as plt
 
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from PIL import Image
+import torchvision.transforms as transforms
+import numpy as np
 
 HOST_NAME = 'localhost'
 PORT = 3000
+
+# classes = ['bags', 'bottoms', 'clocks', 'earrings', 'gloves', 'headphones', 
+#     'lamps', 'lighters', 'sandles', 'suits', 'watches', 'winter-boots']
+classes = ('bags', 'clock', 'earrings', 'gloves', 'winterboots')
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
 
-parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
+parser = argparse.ArgumentParser(description='Deep Learning Image Classifier')
 parser.add_argument('data', metavar='DIR', default='',
                     help='path to dataset')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
@@ -77,6 +87,7 @@ class MyHandler(BaseHTTPRequestHandler):
                           "</h1></body></html>")
 
 def main():
+	# getPrediction('boot.jpg', torch.cuda.is_available())
     global args
     args = parser.parse_args()
 
@@ -91,43 +102,96 @@ def main():
     else:
         train_model()
 
+class TestImageFolder(torch.utils.data.Dataset):
+    def __init__(self, root, transform=None):
+        images = []
+        for filename in sorted(glob.glob('real_test/all/' + "*.jpg")):
+            images.append('{}'.format(filename))
+
+        self.root = root
+        self.imgs = images
+        self.transform = transform
+
+    def __getitem__(self, index):
+        filename = self.imgs[index]
+        img = Image.open(os.path.join(self.root, filename))
+        if self.transform is not None:
+            img = self.transform(img)
+        return img, filename
+
+    def __len__(self):
+        return len(self.imgs)
 
 def getPrediction(file, use_gpu):
     best_model = 'model_best.pth.tar'
     model = torch.load(best_model)
 
-    data_transforms = {
-        'uploads': transforms.Compose([
-            transforms.RandomSizedCrop(224),
-            transforms.RandomHorizontalFlip(),
+    data_dir = 'real_test/all'
+    # dset = datasets.ImageFolder(os.path.join(data_dir), 
+    #     transforms.Compose([
+    #         transforms.Scale(256),
+    #         transforms.CenterCrop(224),
+    #         transforms.ToTensor(),
+    #         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    #         ])
+    #     )
+    dset = TestImageFolder('', 
+        transforms.Compose([
+            transforms.Scale(256),
+            transforms.CenterCrop(224),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
-    }
+            ])
+        )
 
-    dsets = {x: datasets.ImageFolder(os.path.join(file, x), data_transforms[x])
-             for x in ['uploads']}
-    dset_loaders = {x: torch.utils.data.DataLoader(dsets[x], batch_size=1,
-                                                   shuffle=True, num_workers=4)
-                    for x in ['uploads']}
-    dset_classes = dsets['uploads'].classes
+    test_loader = torch.utils.data.DataLoader(dset, batch_size=1, shuffle=True, num_workers=1, pin_memory=False)
+    # dset_dict = dict(dset.imgs)
+    # dset_classes = dset.classes
 
-    for i, data in enumerate(dset_loaders['uploads']):
-        inputs, labels = data
-        if use_gpu:
-            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
-        else:
-            inputs, labels = Variable(inputs), Variable(labels)
+    # data_iter = iter(dset_loaders)
+    # inputs, labels = data_iter.next()
 
-        outputs = model(inputs)
+    for i, (images, filepath) in enumerate(test_loader):
+        outputs = model(Variable(images))
+        # if use_gpu:
+        #     inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
+        # else:
+        #     inputs, labels = Variable(inputs), Variable(labels)
+
+        # outputs = model(inputs)
         _, preds = torch.max(outputs.data, 1)
 
-        prediction = dset_classes[labels.data[0]]
+        imshow(Variable(images).cpu().data[0])
+        import pdb;pdb.set_trace()
 
-        if i == 1:
-            return prediction
+        smax = nn.Softmax()
+        smax_out = smax(outputs)[0]
+        cat_prob = smax_out.data[0]
+        dog_prob = smax_out.data[1]
+        
+        
+        # print("PREDICTION: " + classes[labels.data[0]])
+        # print("ACTUAL: " + dset_classes[labels.data[0]])
+        # print(str((preds==data).sum()))
 
-    return "ERROR"
+def imshow(inp):
+    inp = inp.numpy().transpose((1, 2, 0))
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    inp = std * inp + mean
+    plt.figure()
+    plt.imshow(inp)
+    plt.show()
+
+def image_loader(image_name):
+	"""load image, returns cuda tensor"""
+	imsize = 256
+	loader = transforms.Compose([transforms.Scale(imsize), transforms.ToTensor()])
+	image = Image.open(image_name)
+	image = loader(image).float()
+	image = Variable(image, requires_grad=True)
+	image = image.unsqueeze(0) #this is for VGG, may not be needed for ResNet
+	return image
 
 def train_model():
     use_gpu = torch.cuda.is_available()
@@ -241,8 +305,8 @@ def train(train_loader, model, criterion, optimizer, epoch, use_gpu):
         if use_gpu:
             target = target.cuda(async=True)
 
-        input_var = torch.autograd.Variable(input)
-        target_var = torch.autograd.Variable(target)
+        input_var = Variable(input)
+        target_var = Variable(target)
 
         # compute output
         output = model(input_var)
@@ -320,10 +384,10 @@ def validate(val_loader, model, criterion, use_gpu):
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='checkpoint.pth'):
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(filename, 'model_best.pth')
 
 
 class AverageMeter(object):
