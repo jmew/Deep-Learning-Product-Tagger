@@ -15,7 +15,6 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 from torch.autograd import Variable
-import matplotlib.pyplot as plt
 
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from PIL import Image
