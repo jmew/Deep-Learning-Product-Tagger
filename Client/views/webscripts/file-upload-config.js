@@ -4,9 +4,7 @@ Dropzone.options.uploadWidget = {
     dictDefaultMessage: "Drop your image file here, or click to select one",
     init: function() {
 		this.on("success", function(file, resp) {
-			console.log(file);
-			console.log(resp);
-			$('#product-tags').val(resp.tag + resp.confidence); 
+			$('#product-tags').val(resp.tag + ' (' + resp.confidence + ')');
 		});
 		this.on("addedfile", function(file, resp) {
 			console.log("added");
