@@ -26,14 +26,6 @@ app.post( '/upload', upload.single( 'file' ), function( req, res, next ) {
     } );
   }
 
-  var dimensions = sizeOf( req.file.path );
-
-  if ( ( dimensions.width < 400 ) || ( dimensions.height < 400 ) ) {
-    return res.status( 422 ).json( {
-      error : 'The image must be at least 400 x 400px'
-    } );
-  }
-
   const options = {
   	method: 'POST',
   	uri: 'http://localhost:3000',
@@ -52,7 +44,6 @@ app.post( '/upload', upload.single( 'file' ), function( req, res, next ) {
       'tag': parseResponse[0], 
       'confidence': parseResponse[1]
     }
-
 
     console.log(req.file);
     return res.status(200).send(sendBack);

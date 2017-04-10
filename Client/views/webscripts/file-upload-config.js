@@ -12,12 +12,7 @@ Dropzone.options.uploadWidget = {
 			console.log("added");
 		});
 		this.on('thumbnail', function(file) {
-			if ( file.width < 400 || file.height < 400 ) {
-			  file.rejectDimensions();
-			}
-			else {
-			  file.acceptDimensions();
-			}
+			file.acceptDimensions();
 		});
     },
     accept: function(file, done) {
