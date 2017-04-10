@@ -5,5 +5,6 @@
 -To start server: python Training.py --server data
 
 /client - Front End
+-To start server: node server
 
 Training.py - Training script
