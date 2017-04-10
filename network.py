@@ -77,14 +77,18 @@ class MyHandler(BaseHTTPRequestHandler):
         s.end_headers()
 
         postLength = int(s.headers['Content-Length'])
-        file = s.rfile.read(postLength)
+        resp = s.rfile.read(postLength)
 
-        prediction = getPrediction(file, torch.cuda.is_available())
+        index = resp.find("filename") + 11
+        file = resp[index:resp.find('"', index)]
+        file_path = "Client/uploads/" + file
+
+        prediction = getPrediction(file_path, torch.cuda.is_available())
 
         s.wfile.write(str(prediction))
 
 def main():
-	# getPrediction('real_test/all/', torch.cuda.is_available())
+	# getPrediction('real_test/lamp.jpg', torch.cuda.is_available())
     global args
     args = parser.parse_args()
 
@@ -142,10 +146,12 @@ def getPrediction(file, use_gpu):
     outputs = model(inputs)
     _, preds = torch.max(outputs.data, 1)
     
-    print("PREDICTION: " + classes[preds[0][0]])
+    prediction = preds[0][0]
+    print("PREDICTION: " + classes[prediction])
+    print("Percentage: %" + '%.2f' % outputs.data[0][prediction])
     print("ACTUAL: " + filepath[0])
 
-    return str(classes[preds[0][0]])
+    return str(classes[preds[0][0]]) + ',%' + '%.2f' % outputs.data[0][prediction]
 
 def image_loader(image_name):
 	"""load image, returns cuda tensor"""

@@ -1,0 +1,30 @@
+html, body {
+	background: #eee;
+}
+
+.navbar-fixed {
+    top: 0;
+    z-index: 100;
+    position: fixed;
+    width: 100%;
+}
+
+#demo-content {
+	padding-top: 80px;
+	max-width: 85%;
+	margin: 0 auto;
+}
+
+.nav-item a.is-tab.is-active, a.nav-item.is-tab.is-active {
+	border-bottom: 3px solid #5EC7F0 !important;
+    color: #5EC7F0 !important;
+    padding-bottom: calc(.75rem - 3px);
+}
+
+a {
+	color: #5EC7F0;
+}
+
+#second-card {
+	margin-top: 20px;
+}
