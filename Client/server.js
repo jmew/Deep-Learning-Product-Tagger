@@ -15,7 +15,7 @@ app.engine( '.hbs', exphbs( { extname: '.hbs' } ) );
 app.set('view engine', '.hbs');
 
 app.get( '/', function( req, res, next ){
-  return res.render( 'file-upload' );
+  return res.render( 'file-upload2' );
 });
 
 app.post( '/upload', upload.single( 'file' ), function( req, res, next ) {
