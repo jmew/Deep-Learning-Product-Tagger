@@ -1,9 +1,11 @@
 # Deep Learning Product Image Tagger
 
--To start training:  python Training.py --epochs [NUM_EPOCHS] --pretrained [DIR_TO_IMAGES]
+-To start training:  python network.py --epochs [NUM_EPOCHS] --pretrained [DIR_TO_IMAGES]
 
--To start server: python Training.py --server data
+-To start backend server: python network.py --server data
 
-/client - Front End
+/Client - Front End
 
-Training.py - Training script
+-To start frontend server: node server
+
+network.py - Training script
